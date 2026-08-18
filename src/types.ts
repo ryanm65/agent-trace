@@ -48,6 +48,25 @@ export interface ToolResultEvent {
 
 export type TraceEvent = UserEvent | AssistantEvent | ToolCallEvent | ToolResultEvent;
 
+/** A tool_call matched with the tool_result that closed it. */
+export interface ToolSpan {
+  /** The id they were matched on, or null when matched by FIFO order. */
+  id: string | null;
+  name: string;
+  args: unknown;
+  call: ToolCallEvent;
+  result: ToolResultEvent;
+  /** result.durationMs when present, otherwise result.ts - call.ts. */
+  durationMs: number | null;
+  ok: boolean;
+}
+
+export interface PairedEvents {
+  spans: ToolSpan[];
+  /** tool_result events that matched no open tool_call. */
+  orphans: ToolResultEvent[];
+}
+
 /** A line the parser could not turn into an event. */
 export interface TraceIssue {
   /** 1-based line number in the source text. */
