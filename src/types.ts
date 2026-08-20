@@ -80,3 +80,38 @@ export interface ParsedTrace {
   events: TraceEvent[];
   issues: TraceIssue[];
 }
+
+/** Timing and failure totals for one tool name, across every span it appears in. */
+export interface ToolStat {
+  name: string;
+  calls: number;
+  failures: number;
+  /** Sum of durationMs across spans that had one; spans with an unknown duration are excluded. */
+  totalMs: number;
+  avgMs: number;
+  maxMs: number;
+  /** totalMs as a fraction of the trace's overall tool time, 0 when there was none. */
+  timeShare: number;
+}
+
+export interface TraceStats {
+  eventCounts: Record<TraceEventType, number>;
+  totalEvents: number;
+  /** Latest ts minus earliest ts across all events, or null when fewer than two carried a timestamp. */
+  wallClockMs: number | null;
+  /** Sum of every span's durationMs (spans with an unknown duration contribute 0). */
+  toolTimeMs: number;
+  toolCalls: {
+    total: number;
+    completed: number;
+    pending: number;
+    failed: number;
+    /** failed / total, 0 when there were no calls. */
+    failureRate: number;
+  };
+  /** null when no assistant event carried a usage block. */
+  tokens: TokenUsage & { total: number } | null;
+  /** Sorted by totalMs, highest first. */
+  tools: ToolStat[];
+  orphanResults: number;
+}
