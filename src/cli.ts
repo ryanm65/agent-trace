@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, join } from 'node:path';
 import { formatIssue, parseTrace } from './parse.ts';
 import { computeStats } from './stats.ts';
@@ -34,7 +34,7 @@ function usageError(message: string): number {
   return 2;
 }
 
-function run(argv: readonly string[]): number {
+export function run(argv: readonly string[]): number {
   if (argv.includes('-h') || argv.includes('--help')) {
     process.stdout.write(USAGE);
     return 0;
@@ -110,4 +110,8 @@ function run(argv: readonly string[]): number {
   return 0;
 }
 
-process.exit(run(process.argv.slice(2)));
+// Only run as a side effect when this file is the process entry point, so
+// tests can import `run` without it immediately exiting the test runner.
+if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  process.exit(run(process.argv.slice(2)));
+}
