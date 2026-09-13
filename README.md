@@ -108,6 +108,8 @@ console.log(renderTimeline(events, { tool: 'run_tests', maxArgLength: 40 }));
   `issues` as `{ line, message, raw }`.
 - `parseTraceStrict(text): TraceEvent[]` -- throws if anything was unusable.
 - `parseTraceLine(raw, line?): LineResult` -- single line, for streaming callers.
+- `formatIssue(issue): string` -- render a `TraceIssue` as `line N: message -- raw`,
+  the format `stats`/`show` use for parse warnings.
 - `pairToolEvents(events): { spans, orphans }` -- calls matched to their results,
   each span carrying `durationMs` and `ok`.
 - `computeStats(events): TraceStats` -- wall clock, tool time, per-tool
