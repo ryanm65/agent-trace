@@ -125,3 +125,15 @@ test('orphan results are counted separately from calls', () => {
   assert.equal(stats.orphanResults, 1);
   assert.equal(stats.toolCalls.total, 0);
 });
+
+test('a trace where every call is still pending has no spans, no tool time, and zero failure rate', () => {
+  const events: TraceEvent[] = [
+    call({ id: 'a', name: 'read_file', ts: 0 }),
+    call({ id: 'b', name: 'run_tests', ts: 0 }),
+  ];
+  const stats = computeStats(events);
+  assert.deepEqual(stats.toolCalls, { total: 2, completed: 0, pending: 2, failed: 0, failureRate: 0 });
+  assert.equal(stats.toolTimeMs, 0);
+  assert.deepEqual(stats.tools, []);
+  assert.equal(stats.orphanResults, 0);
+});
