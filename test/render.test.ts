@@ -97,6 +97,29 @@ test('filtering by tool hides text, other tools, and orphans', () => {
   assert.ok(!output.includes('orphan'));
 });
 
+test('a call with no args renders empty parens', () => {
+  const events: TraceEvent[] = [call({ id: 'a', name: 'read_file', args: null })];
+  const output = renderTimeline(events);
+  assert.ok(output.includes('read_file()'));
+});
+
+test('string args are shown as-is, not JSON-quoted', () => {
+  const events: TraceEvent[] = [call({ id: 'a', name: 'run_shell', args: 'ls -la' })];
+  const output = renderTimeline(events);
+  assert.ok(output.includes('run_shell(ls -la)'));
+  assert.ok(!output.includes('"ls -la"'));
+});
+
+test('maxArgLength: 0 blanks out args and result detail entirely', () => {
+  const events: TraceEvent[] = [
+    call({ id: 'a', ts: 0, name: 'read_file', args: { path: 'x' } }),
+    result({ id: 'a', ts: 10, output: 'contents' }),
+  ];
+  const lines = renderTimeline(events, { maxArgLength: 0 }).split('\n');
+  assert.ok(lines[0].includes('read_file()'));
+  assert.equal(lines[1].trim(), '-> ok in 10ms');
+});
+
 test('args and output are truncated to maxArgLength', () => {
   const events: TraceEvent[] = [
     call({ id: 'a', name: 'read_file', args: { path: 'a'.repeat(100) } }),
