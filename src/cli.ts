@@ -70,7 +70,7 @@ export function run(argv: readonly string[]): number {
       const n = Number(raw);
       if (!Number.isFinite(n) || n < 0) return usageError(`--max-arg expects a non-negative number, got "${raw}"`);
       maxArgLength = n;
-    } else if (arg.startsWith('-')) {
+    } else if (arg.startsWith('-') && arg !== '-') {
       return usageError(`unknown option "${arg}"`);
     } else if (file !== null) {
       return usageError(`unexpected extra argument "${arg}"`);

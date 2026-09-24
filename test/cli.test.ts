@@ -1,11 +1,14 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
 import { run } from '../src/cli.ts';
 
 const EXAMPLE = 'examples/session.jsonl';
+const CLI_ENTRY = fileURLToPath(new URL('../src/cli.ts', import.meta.url));
 
 const dir = mkdtempSync(join(tmpdir(), 'agent-trace-cli-'));
 process.on('exit', () => rmSync(dir, { recursive: true, force: true }));
@@ -164,4 +167,21 @@ test('a trace with no usable events at all exits 1', () => {
   const { code, stderr } = runCapturing(['stats', emptyFile]);
   assert.equal(code, 1);
   assert.ok(stderr.includes('no usable events'));
+});
+
+// "-" makes the CLI read fd 0, so it has to be exercised as a real child
+// process rather than through runCapturing, which only patches stdout/stderr.
+test('"-" reads the trace from stdin', () => {
+  const input = readFileSync(EXAMPLE, 'utf8');
+  const result = spawnSync(process.execPath, [CLI_ENTRY, 'stats', '-'], { input, encoding: 'utf8' });
+  assert.equal(result.status, 0);
+  assert.ok(result.stdout.startsWith('events'));
+  assert.ok(result.stdout.includes('run_tests'));
+});
+
+test('stdin input still reports parse warnings and honors --strict', () => {
+  const input = ['{"type":"user","ts":0,"text":"hi"}', 'not json at all'].join('\n');
+  const result = spawnSync(process.execPath, [CLI_ENTRY, 'stats', '-', '--strict'], { input, encoding: 'utf8' });
+  assert.equal(result.status, 1);
+  assert.ok(result.stderr.includes('warning: line 2'));
 });
