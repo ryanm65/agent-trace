@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import { parseTraceLine } from '../src/parse.ts';
 import { pairToolEvents } from '../src/pair.ts';
 import type { ToolCallEvent, ToolResultEvent, TraceEvent } from '../src/types.ts';
 
@@ -18,6 +19,25 @@ test('matches call and result by id', () => {
   assert.equal(spans.length, 2);
   assert.equal(spans[0].id, 'b');
   assert.equal(spans[1].id, 'a');
+});
+
+test('Anthropic-style tool_use/tool_result blocks match on tool_use_id, not FIFO order', () => {
+  const events: TraceEvent[] = [
+    '{"type":"tool_use","id":"toolu_a","name":"first"}',
+    '{"type":"tool_use","id":"toolu_b","name":"second"}',
+    '{"type":"tool_result","tool_use_id":"toolu_b","content":"two"}',
+    '{"type":"tool_result","tool_use_id":"toolu_a","content":"one"}',
+  ].map((line) => {
+    const parsed = parseTraceLine(line);
+    if (!parsed.ok) throw new Error('expected a valid event');
+    return parsed.event;
+  });
+  const { spans } = pairToolEvents(events);
+  assert.equal(spans.length, 2);
+  assert.equal(spans[0].name, 'second');
+  assert.equal(spans[0].result.output, 'two');
+  assert.equal(spans[1].name, 'first');
+  assert.equal(spans[1].result.output, 'one');
 });
 
 test('id-less result matches the oldest still-open call', () => {

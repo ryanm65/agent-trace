@@ -41,7 +41,12 @@ const TYPE_ALIASES: Record<string, TraceEventType> = {
 const TS_KEYS = ['ts', 'timestamp', 'time', 'at', 'started_at', 'startedAt'] as const;
 const TEXT_KEYS = ['text', 'content', 'message', 'body'] as const;
 const NAME_KEYS = ['name', 'tool', 'tool_name', 'toolName', 'function'] as const;
-const ID_KEYS = ['id', 'call_id', 'callId', 'tool_call_id', 'toolCallId'] as const;
+/**
+ * `tool_use_id` is what Anthropic's own content-block format calls this field
+ * on a tool_result -- the call itself is just `id`, so it lands here rather
+ * than needing its own key list.
+ */
+const ID_KEYS = ['id', 'call_id', 'callId', 'tool_call_id', 'toolCallId', 'tool_use_id', 'toolUseId'] as const;
 const ARG_KEYS = ['args', 'arguments', 'input', 'params', 'parameters'] as const;
 const OUTPUT_KEYS = ['output', 'result', 'content', 'text', 'stdout'] as const;
 const USAGE_KEYS = ['usage', 'tokens', 'token_usage', 'tokenUsage'] as const;

@@ -71,6 +71,15 @@ test('tool_call picks up id and args aliases', () => {
   assert.deepEqual(result.event.args, { path: 'a.txt' });
 });
 
+test('tool_result picks up Anthropic-style tool_use_id as its correlation id', () => {
+  const call = parseTraceLine('{"type":"tool_use","id":"toolu_01","name":"read_file"}');
+  const result = parseTraceLine('{"type":"tool_result","tool_use_id":"toolu_01","content":"ok"}');
+  assert.ok(call.ok && call.event.type === 'tool_call');
+  assert.ok(result.ok && result.event.type === 'tool_result');
+  assert.equal(call.event.id, 'toolu_01');
+  assert.equal(result.event.id, 'toolu_01');
+});
+
 test('tool_result defaults to ok when nothing says otherwise', () => {
   const result = parseTraceLine('{"type":"tool_result"}');
   assert.ok(result.ok && result.event.type === 'tool_result');
